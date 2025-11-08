@@ -15,7 +15,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
 }) => {
   return (
     <div
-      className={`bg-gray-200 animate-pulse ${width} ${height} ${radius} ${className}`}
+      className={`bg-gray-200 animate-pulse ${width} ${height} ${radius} ${className}`} 
     />
   );
 };
