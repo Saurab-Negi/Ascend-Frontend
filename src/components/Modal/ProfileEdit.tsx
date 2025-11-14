@@ -117,10 +117,10 @@ function ProfileEdit({
       bucketName: "ascend-dev-st-key-logo",
     };
     const data = await post(Api.GenratePSUrl(), payload);
-    setS3url(data?.data?.presignedUrl?.split("?")[0]);
+    setS3url(data?.data?.data?.presignedUrl?.split("?")[0]);
     setFormData((prev) => ({
       ...prev,
-      profileImg: data?.data?.presignedUrl?.split("?")[0],
+      profileImg: data?.data?.data?.presignedUrl?.split("?")[0],
     }));
   }
 

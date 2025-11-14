@@ -354,7 +354,7 @@ function Dashboard() {
       )}
       {ModalId === 2 && (
         <AskToAi
-          GuideType ={users ==="true" ? "Tour" : "Conversation"}
+          GuideType ={"Tour"}
           AiType={ModalId}
           isOpen={isOpen}
           setIsOpen={closeModal}

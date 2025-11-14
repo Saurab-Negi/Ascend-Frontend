@@ -1,10 +1,11 @@
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import type { modal } from "../../types/modal";
-import { FaRobot, FaUser } from "react-icons/fa";
+import { FaRobot, FaUser, FaMicrophone } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
 import Api from "../../services/SoulLog/SoulLog";
 import usePost from "../../hooks/usePost";
 import speak from "../../utils/TextToSpeech";
+import SpeechRecognition, {useSpeechRecognition} from "react-speech-recognition";
 
 interface Message {
   role: "user" | "coach";
@@ -24,6 +25,8 @@ function AskToAi({ isOpen, setIsOpen, AiType, prompt,GuideType }: modal) {
   ]);
   const [input, setInput] = useState("");
   const [stage, setStage] = useState("Tour");
+  const [isRecording, setIsRecording] = useState(false);
+  const { transcript, browserSupportsSpeechRecognition, resetTranscript } = useSpeechRecognition();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { post } = usePost();
 
@@ -34,6 +37,22 @@ function AskToAi({ isOpen, setIsOpen, AiType, prompt,GuideType }: modal) {
       setStage("Conversation");
     }
   },[GuideType]);
+
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
+
+  function toggleListening() {
+    if (isRecording) {
+      SpeechRecognition.stopListening();
+      setIsRecording(false);
+    } else {
+      SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+      setIsRecording(true);
+    }
+  }
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -50,6 +69,9 @@ function AskToAi({ isOpen, setIsOpen, AiType, prompt,GuideType }: modal) {
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInput("");
+    SpeechRecognition.stopListening(); // Stop listening
+    setIsRecording(false);
+    resetTranscript(); // Clear transcript after sending message
 
     try {
       const recentMessages = updatedMessages.slice(-4).map((msg) => ({
@@ -275,8 +297,24 @@ useEffect(() => {
   }
 }, [isOpen, AiType]);
 
+  function getBrowserName() {
+    const ua = navigator.userAgent;
 
+    if ((navigator as any).brave) return "Brave"; // must be before Chrome check
+    if (ua.includes("Edg/")) return "Edge";
+    if (ua.includes("Chrome") && !ua.includes("Edg/") && !ua.includes("OPR/"))
+      return "Chrome";
+    if (ua.includes("OPR/")) return "Opera";
+    if (ua.includes("SamsungBrowser")) return "Samsung Internet";
+    if (ua.includes("Firefox")) return "Firefox";
+    if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
 
+    return "Unknown";
+  }
+
+  const browser = getBrowserName();
+
+  const supportedBrowsers = ["Chrome", "Edge", "Opera", "Samsung Internet"];
 
   if (!isOpen) return null;
   return (
@@ -354,10 +392,10 @@ useEffect(() => {
 
 
           {/* Input area */}
-          <div className="flex items-center p-4 border-t bg-white flex-shrink-0">
+          <div className="flex flex-col sm:flex-row gap-2 items-center p-4 border-t bg-white flex-shrink-0">
             <input
               type="text"
-              className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004236]"
+              className="flex-1 w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004236]"
               placeholder="Share what's on your mind or ask for guidance..."
               value={input}
               disabled={stage === "Tour" || stage === "Conversation" && AiType === 2}
@@ -369,13 +407,33 @@ useEffect(() => {
                 }
               }}
             />
-            <button
-              onClick={sendMessage}
-              disabled={input === ""}
-              className="ml-3 bg-[#004236] hover:bg-[#8EA690] text-white px-6 py-2 rounded-md text-xl"
-            >
-              <IoIosSend />
-            </button>
+            {!browserSupportsSpeechRecognition ||
+              !supportedBrowsers.includes(browser) ? (
+                <span className="text-red-500">
+                  Your browser does not support speech recognition, please use a
+                  supported browser.
+                </span>
+              ) : null}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleListening}
+                className={`border flex gap-2 text-md font-semibold border-[#004236] px-4 py-2 rounded-md text-[#004236] 
+                  hover:text-[#8EA690] items-center disabled:text-[#8EA690] disabled:cursor-not-allowed ${
+                  isRecording ? "bg-[#8EA690]" : ""
+                }`}
+                disabled={stage === "Tour" || stage === "Conversation" && AiType === 2}
+              >
+                <FaMicrophone />{" "}
+                {isRecording ? "Pause Listening" : "Start Voice"}
+              </button>
+              <button
+                onClick={sendMessage}
+                disabled={input === ""}
+                className="bg-[#004236] hover:bg-[#8EA690] text-white px-6 py-2 rounded-md text-xl"
+              >
+                <IoIosSend />
+              </button>
+            </div>
           </div>
         </div>
       </div>
