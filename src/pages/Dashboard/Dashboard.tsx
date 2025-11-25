@@ -315,7 +315,7 @@ function Dashboard() {
         style={{
           backgroundColor: "transparent",
           backgroundRepeat: "no-repeat",
-          backgroundImage: `url("/Robo.png")`,
+          backgroundImage: `url("/Bot.png")`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           width: "100px",
