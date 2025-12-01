@@ -1,6 +1,6 @@
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import type { modal } from "../../types/modal";
-import { FaRobot, FaUser, FaMicrophone } from "react-icons/fa";
+import { FaMicrophone } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
 import Api from "../../services/SoulLog/SoulLog";
 import usePost from "../../hooks/usePost";
