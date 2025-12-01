@@ -26,6 +26,7 @@ function AskToAi({ isOpen, setIsOpen, AiType, prompt,GuideType }: modal) {
   const [input, setInput] = useState("");
   const [stage, setStage] = useState("Tour");
   const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const { transcript, browserSupportsSpeechRecognition, resetTranscript } = useSpeechRecognition();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { post } = usePost();
@@ -53,6 +54,8 @@ function AskToAi({ isOpen, setIsOpen, AiType, prompt,GuideType }: modal) {
       setIsRecording(true);
     }
   }
+
+  console.log("isSpeaking: ", isSpeaking);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -136,7 +139,11 @@ do you have any questions about these features? `,
           };
 
           setMessages((prev) => [...prev, reply]);
-          speak(reply.content);
+          speak(
+            reply.content,
+            () => setIsSpeaking(true),
+            () => setIsSpeaking(false)
+          );
           setStage("Conversation");
           return; 
         }
@@ -155,7 +162,11 @@ do you have any questions about these features? `,
 
           setMessages((prev) => [...prev, reply]);
           setStage("Guide");
-          speak(reply.content);
+          speak(
+            reply.content,
+            () => setIsSpeaking(true),
+            () => setIsSpeaking(false)
+          );
           return; 
         }
 
@@ -172,7 +183,11 @@ do you have any questions about these features? `,
 
           setMessages((prev) => [...prev, reply]);
           setStage("Guide");
-          speak(reply.content);
+          speak(
+            reply.content,
+            () => setIsSpeaking(true),
+            () => setIsSpeaking(false)
+          );
           return; 
         }
 
@@ -190,7 +205,11 @@ do you have any questions about these features? `,
 
           setMessages((prev) => [...prev, reply]);
           setStage("Guide");
-          speak(reply.content);
+          speak(
+            reply.content,
+            () => setIsSpeaking(true),
+            () => setIsSpeaking(false)
+          );
           return; 
         }
 
@@ -210,7 +229,11 @@ do you have any questions about these features? `,
             coachingType: "guidance",
           };
           setMessages((prev) => [...prev, reply]);
-          speak(reply.content);
+          speak(
+            reply.content,
+            () => setIsSpeaking(true),
+            () => setIsSpeaking(false)
+          );
         }
       }
 
@@ -234,6 +257,7 @@ do you have any questions about these features? `,
       }
     } catch (err) {
       console.error("Error fetching AI response", err);
+      setIsSpeaking(false);
     }
   };
   
@@ -285,7 +309,11 @@ useEffect(() => {
 
       if (isCancelled) return;
 
-      speak("Hi,  I'm AscendAI. Would you like me to give you a quick tour of the Ascend platform?");
+      speak(
+          "Hi,  I'm AscendAI. Would you like me to give you a quick tour of the Ascend platform?",
+          () => setIsSpeaking(true),
+          () => setIsSpeaking(false)
+        );
     };
 
     initializeSpeech();
@@ -293,6 +321,7 @@ useEffect(() => {
     return () => {
       isCancelled = true;
       speechSynthesis.cancel();
+      setIsSpeaking(false);
     };
   }
 }, [isOpen, AiType]);
@@ -329,28 +358,46 @@ useEffect(() => {
             </p>
             <p className="text-sm">{new Date().toDateString()}</p>
           </div>
-          <button onClick={() =>{ setIsOpen(false); speak("")}}>
+          <button onClick={() =>{ setIsOpen(false); speak(""); setIsSpeaking(false);}}>
             <IoMdClose size={20} />
           </button>
         </div>
         <div className="">
-          <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 bg-gray-50 h-[50vh]">
+          <div className="w-full flex justify-center relative">
+            <video
+            className={`avatar-video ${isSpeaking ? "visible" : "hidden"}`}
+              src={"/Talking Avatar.mp4"}
+              autoPlay
+              loop
+              muted
+              style={{ width: 350, margin: "1rem" }}
+            />
+            <video
+            className={`avatar-video ${!isSpeaking ? "visible" : "hidden"}`}
+              src={"/Silent Avatar.mp4"}
+              autoPlay
+              loop
+              muted
+              style={{ width: 350, margin: "1rem" }}
+            />
+          </div>
+          {/* <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 bg-gray-50 h-[50vh]">
             {messages.map((msg, index) => (
               <div
                 key={index}
                 className={`flex items-end ${
                   msg.role === "user" ? "justify-end" : "justify-start"
                 }`}
-              >
+              > */}
                 {/* coach icon (left side) */}
-                {msg.role === "coach" && (
+                {/* {msg.role === "coach" && (
                   <div className="w-7 h-7 mr-2 bg-gradient-to-r from-[#8EA690] to-[#004236] flex items-center justify-center rounded-full text-white">
                     <FaRobot />
                   </div>
-                )}
+                )} */}
 
                 {/* Message bubble */}
-                <div
+                {/* <div
                   className={`max-w-[70%] px-4 py-2 rounded-xl text-xs sm:text-sm ${
                     msg.role === "user"
                       ? "bg-blue-600 text-white rounded-br-none"
@@ -361,10 +408,10 @@ useEffect(() => {
                   <div className="text-[10px] text-gray-300 mt-1 text-right">
                     {msg.time}
                   </div>
-                </div>
+                </div> */}
 
                 {/* USER icon (right side) */}
-                {msg.role === "user" && (
+                {/* {msg.role === "user" && (
                   <div className="w-7 h-7 ml-2 rounded-full text-white flex items-center justify-center bg-gray-400">
                     <FaUser />
                   </div>
@@ -372,7 +419,7 @@ useEffect(() => {
               </div>
             ))}
             <div ref={messagesEndRef} />
-          </div>
+          </div> */}
          {((stage === "Tour" || stage === "Conversation") && AiType === 2) && (
   <div className="w-full flex gap-4 justify-center items-center  my-3">
     <button
